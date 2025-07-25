@@ -60,7 +60,7 @@ func NewGame(ap *ansipixels.AnsiPixels) *Game {
 }
 
 func (g *Game) AddOneInRandomSpot() {
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(15 * time.Millisecond)
 	for {
 		x, y := rand.IntN(4), rand.IntN(4)
 		if g.State[x][y] != 0 {
@@ -90,74 +90,37 @@ func (g *Game) Draw() {
 	}
 }
 
-func (g *Game) Left() bool {
-	//x--
+func (g *Game) shift(x0, y0, xf, yf, xne, yne, dx, dy, dx1, dy1 int) bool {
 	changed := false
-	for y := 0; y < 4; y++ {
-		for x := 1; x < 4; x++ {
-			if g.State[x][y] == 0 {
-				continue
-			}
-			var x2 int
-			for x2 = x; x2 != 0 && g.State[x2][y] != 0 && g.State[x2-1][y] == 0; x2-- {
-				g.State[x2][y], g.State[x2-1][y] = g.State[x2-1][y], g.State[x2][y]
-				g.Draw()
-				time.Sleep(50 * time.Millisecond)
-				changed = true
-			}
-			if x2 != 0 && g.State[x2][y] == g.State[x2-1][y] {
-				g.State[x2][y], g.State[x2-1][y] = 0, g.State[x2-1][y]*2
-				g.Draw()
-				time.Sleep(50 * time.Millisecond)
-				changed = true
-			}
-		}
-	}
-	return changed
-}
-
-func (g *Game) Right() bool {
-	changed := false
-	for y := 0; y < 4; y++ {
-		for x := 2; x > -1; x-- {
-			if g.State[x][y] == 0 {
-				continue
-			}
-			var x2 int
-			for x2 = x; x2 != 3 && g.State[x2][y] != 0 && g.State[x2+1][y] == 0; x2++ {
-				g.State[x2][y], g.State[x2+1][y] = g.State[x2+1][y], g.State[x2][y]
-				g.Draw()
-				time.Sleep(50 * time.Millisecond)
-				changed = true
-			}
-			if x2 != 3 && g.State[x2][y] == g.State[x2+1][y] {
-				g.State[x2][y], g.State[x2+1][y] = 0, g.State[x2+1][y]*2
-				g.Draw()
-				time.Sleep(50 * time.Millisecond)
-				changed = true
-			}
-		}
-	}
-	return changed
-}
-func (g *Game) Up() bool {
-	changed := false
-	for x := 0; x < 4; x++ {
-		for y := 1; y < 4; y++ {
+	for x := x0; x != xf; x += dx1 {
+		for y := y0; y != yf; y += dy1 {
 			if g.State[x][y] == 0 {
 				continue
 			}
 			var y2 int
-			for y2 = y; y2 != 0 && g.State[x][y2] != 0 && g.State[x][y2-1] == 0; y2-- {
-				g.State[x][y2], g.State[x][y2-1] = g.State[x][y2-1], g.State[x][y2]
+			for y2 = y; y2 != yne && g.State[x][y2] != 0 && g.State[x][y2+dy] == 0 && dy != 0; y2 += dy {
+				g.State[x][y2], g.State[x][y2+dy] = g.State[x][y2+dy], g.State[x][y2]
 				g.Draw()
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(15 * time.Millisecond)
 				changed = true
 			}
-			if y2 != 0 && g.State[x][y2] == g.State[x][y2-1] {
-				g.State[x][y2], g.State[x][y2-1] = 0, g.State[x][y2-1]*2
+			if y2 != yne && g.State[x][y2] == g.State[x][y2+dy] && dy != 0 {
+				g.State[x][y2], g.State[x][y2+dy] = 0, g.State[x][y2+dy]*2
 				g.Draw()
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(15 * time.Millisecond)
+				changed = true
+			}
+			var x2 int
+			for x2 = x; x2 != xne && g.State[x2][y] != 0 && g.State[x2+dx][y] == 0 && dx != 0; x2 += dx {
+				g.State[x2][y], g.State[x2+dx][y] = g.State[x2+dx][y], g.State[x2][y]
+				g.Draw()
+				time.Sleep(15 * time.Millisecond)
+				changed = true
+			}
+			if x2 != xne && g.State[x2][y] == g.State[x2+dx][y] && dx != 0 {
+				g.State[x2][y], g.State[x2+dx][y] = 0, g.State[x2+dx][y]*2
+				g.Draw()
+				time.Sleep(15 * time.Millisecond)
 				changed = true
 			}
 		}
@@ -165,35 +128,45 @@ func (g *Game) Up() bool {
 	return changed
 
 }
-func (g *Game) Down() bool {
-	changed := false
-	for x := 0; x < 4; x++ {
-		for y := 2; y > -1; y-- {
-			if g.State[x][y] == 0 {
-				continue
-			}
-			var y2 int
-			for y2 = y; y2 != 3 && g.State[x][y2] != 0 && g.State[x][y2+1] == 0; y2++ {
-				g.State[x][y2], g.State[x][y2+1] = g.State[x][y2+1], g.State[x][y2]
-				g.Draw()
-				time.Sleep(50 * time.Millisecond)
-				changed = true
-			}
-			if y2 != 3 && g.State[x][y2] == g.State[x][y2+1] {
-				g.State[x][y2], g.State[x][y2+1] = 0, g.State[x][y2+1]*2
-				g.Draw()
-				time.Sleep(50 * time.Millisecond)
-				changed = true
-			}
-		}
+
+func (g *Game) Left() {
+	if g.shift(1, 0, 4, 4, 0, 3, -1, 0, 1, 1) {
+		g.AddOneInRandomSpot()
 	}
-	return changed
+}
+func (g *Game) Right() {
+	if g.shift(2, 0, -1, 4, 3, 0, 1, 0, -1, 1) {
+		g.AddOneInRandomSpot()
+	}
+}
+
+func (g *Game) Up() {
+	if g.shift(0, 1, 4, 4, 0, 0, 0, -1, 1, 1) {
+		g.AddOneInRandomSpot()
+	}
+}
+func (g *Game) Down() {
+	if g.shift(0, 2, 4, -1, 0, 3, 0, 1, 1, -1) {
+		g.AddOneInRandomSpot()
+	}
 }
 
 func (g *Game) AnyZeroes() bool {
 	for _, row := range g.State {
 		for _, cell := range row {
 			if cell == 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (g *Game) AnyValidMoves() bool {
+	// search down and right
+	for x := range 3 {
+		for y := range 3 {
+			if g.State[x][y] == g.State[x+1][y] || g.State[x][y+1] == g.State[x][y] {
 				return true
 			}
 		}

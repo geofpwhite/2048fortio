@@ -41,7 +41,7 @@ func main() {
 	ap.HideCursor()
 	g.Draw()
 	for {
-		if !g.AnyZeroes() {
+		if !g.AnyZeroes() && !g.AnyValidMoves() {
 			g.Reset()
 		}
 
@@ -51,26 +51,29 @@ func main() {
 		}
 		slog.Info(fmt.Sprintf("%d\n", ap.Data[0]))
 		switch ap.Data[0] {
-
+		case 27:
+			switch ap.Data[2] {
+			case 65:
+				g.Up()
+			case 66:
+				g.Down()
+			case 67:
+				g.Right()
+			case 68:
+				g.Left()
+			}
 		case 37, 'a': // left
-
-			if g.Left() {
-				g.AddOneInRandomSpot()
-			}
+			g.Left()
 		case 38, 'w': // up
-			if g.Up() {
-				g.AddOneInRandomSpot()
-			}
+			g.Up()
 		case 39, 'd': // right
-			if g.Right() {
-				g.AddOneInRandomSpot()
-			}
+			g.Right()
 		case 40, 's': // down
-			if g.Down() {
-				g.AddOneInRandomSpot()
-			}
+			g.Down()
 		case 'q':
 			return
+		default:
+			fmt.Println((ap.Data))
 		}
 	}
 
