@@ -1,4 +1,4 @@
-module fortio/2048
+module github.com/geofpwhite/2048fortio
 
 go 1.24.4
 

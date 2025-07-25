@@ -2,41 +2,26 @@ package main
 
 import (
 	"fmt"
-	"fortio/2048/game"
+	"log/slog"
+	"os"
 
 	"fortio.org/log"
 	"fortio.org/terminal/ansipixels"
+	"github.com/geofpwhite/2048fortio/game"
 )
-
-const (
-	ONE                   = ansipixels.Red
-	TWO                   = ansipixels.Green
-	FOUR                  = ansipixels.Yellow
-	EIGHT                 = ansipixels.Blue
-	SIXTEEN               = ansipixels.Purple
-	THIRTYTWO             = ansipixels.Cyan
-	SIXTYFOUR             = ansipixels.Gray
-	ONEHUNDREDTWENTYEIGHT = ansipixels.DarkGray
-	TWOHUNDREDFIFTYSIX    = ansipixels.BrightGreen
-)
-
-var numColors = map[int]string{
-	1:   ONE,
-	2:   TWO,
-	4:   FOUR,
-	8:   EIGHT,
-	16:  SIXTEEN,
-	32:  THIRTYTWO,
-	64:  SIXTYFOUR,
-	128: ONEHUNDREDTWENTYEIGHT,
-	256: TWOHUNDREDFIFTYSIX,
-}
 
 func main() {
+	file, err := os.Create("./event.log")
+	// file, err := os.OpenFile("./event.log", os.O_WRONLY|os.O_CREATE, 0777)
+	if err != nil {
+		fmt.Println(err)
+	}
+	loge := slog.New(slog.NewTextHandler(file, &slog.HandlerOptions{}))
+	defer file.Close()
+	slog.SetDefault(loge)
 	ap := ansipixels.NewAnsiPixels(0)
-	err := ap.Open()
+	err = ap.Open()
 
-	ap.WriteString(fmt.Sprintf("%d %d", ap.H, ap.W))
 	if err != nil {
 		log.FErrf("Error opening AnsiPixels: %v", err)
 		panic("")
@@ -51,39 +36,38 @@ func main() {
 	defer ap.Restore()
 	defer ap.ClearScreen()
 	ap.ClearScreen()
-	game := game.NewGame(ap)
+	g := game.NewGame(ap)
+	ap.HideCursor()
+	g.Draw()
 	for {
-		wi, hi := 0, 0
-
-		for i := 0; i < ap.W-4; i += ap.W / 4 {
-			hi = 0
-			for j := 0; j < ap.H-4; j += ap.H / 4 {
-				ap.StartSyncMode()
-				ap.DrawColoredBox(i, j, ap.W/4, ap.H/4, numColors[game.State[wi][hi]], false)
-				ap.WriteAtStr(i+ap.W/8, j+ap.H/8, fmt.Sprintf("%d", game.State[wi][hi]))
-				// time.Sleep(200 * (time.Millisecond))
-				ap.EndSyncMode()
-				hi++
-			}
-			wi++
+		if !g.AnyZeroes() {
+			g.Reset()
 		}
+
 		_, err = ap.ReadOrResizeOrSignalOnce()
 		if err != nil {
 			log.FErrf("Error reading: %v", err)
 		}
+		slog.Info(fmt.Sprintf("%d\n", ap.Data[0]))
 		switch ap.Data[0] {
+
 		case 37, 'a': // left
-			game.Left()
-			game.AddOneInRandomSpot()
+
+			if g.Left() {
+				g.AddOneInRandomSpot()
+			}
 		case 38, 'w': // up
-			game.Up()
-			game.AddOneInRandomSpot()
+			if g.Up() {
+				g.AddOneInRandomSpot()
+			}
 		case 39, 'd': // right
-			game.Right()
-			game.AddOneInRandomSpot()
+			if g.Right() {
+				g.AddOneInRandomSpot()
+			}
 		case 40, 's': // down
-			game.Down()
-			game.AddOneInRandomSpot()
+			if g.Down() {
+				g.AddOneInRandomSpot()
+			}
 		case 'q':
 			return
 		}
