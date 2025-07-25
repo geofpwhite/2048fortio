@@ -7,7 +7,7 @@ import (
 
 	"fortio.org/log"
 	"fortio.org/terminal/ansipixels"
-	"github.com/geofpwhite/twenty48fortio/game"
+	"github.com/geofpwhite/2048fortio/game"
 	// "github.com/geofpwhite/twenty48fortio/game"
 )
 
