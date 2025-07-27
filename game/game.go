@@ -102,7 +102,13 @@ func (g *Game) Draw() {
 	g.AP.StartSyncMode()
 	g.AP.DrawRoundBox(0, 0, 8, 3)
 	g.AP.DrawRoundBox(g.AP.W-8, 0, 8, 3)
-	g.AP.WriteAtStr(1, 1, fmt.Sprintf("%s%d", ansipixels.Red, g.Score))
+	if g.HighScore == g.Score {
+		g.AP.WriteAtStr(1, 1, fmt.Sprintf("%s%d", ansipixels.Green, g.Score))
+		g.AP.WriteAtStr(9, 1, fmt.Sprintf("%sNew High Score", ansipixels.Green))
+	} else {
+		g.AP.WriteAtStr(1, 1, fmt.Sprintf("%s%d", ansipixels.Red, g.Score))
+	}
+	g.AP.WriteAtStr(g.AP.W-21, 1, fmt.Sprint(ansipixels.Green, "High Score ->"))
 	g.AP.WriteAtStr(g.AP.W-7, 1, fmt.Sprintf("%s%d", ansipixels.Green, g.HighScore))
 	g.AP.EndSyncMode()
 }
