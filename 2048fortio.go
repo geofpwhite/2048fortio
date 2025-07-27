@@ -20,7 +20,8 @@ func main() {
 		panic("")
 	}
 	hs := 0
-	hsFile, err := os.ReadFile(usrhomedir + "/highscore.txt")
+	os.Mkdir(usrhomedir+"/.2048", os.FileMode(os.O_APPEND|os.O_RDWR|os.O_TRUNC|os.O_CREATE))
+	hsFile, err := os.ReadFile(usrhomedir + "/.2048/highscore.txt")
 
 	if err == nil {
 		str := string(hsFile)
@@ -30,7 +31,7 @@ func main() {
 			hs = 0
 		}
 	}
-	file, err := os.Create(usrhomedir + "/event.log")
+	file, err := os.Create(usrhomedir + "/.2048/event.log")
 	if err != nil {
 		fmt.Println(err)
 		panic("")
@@ -59,7 +60,7 @@ func main() {
 	g := game.NewGame(ap, hs)
 	defer func() {
 		if g.HighScore > hs {
-			file, err := os.Create(usrhomedir + "/highscore.txt")
+			file, err := os.Create(usrhomedir + "/.2048/highscore.txt")
 			if err != nil {
 				return
 			}
@@ -124,6 +125,9 @@ func main() {
 			g.Draw()
 		case 'q':
 			return
+		default:
+			slog.Info(fmt.Sprint(ap.Data))
+			g.Draw()
 
 		}
 	}
