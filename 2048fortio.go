@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -20,6 +21,8 @@ func main() {
 		panic("")
 	}
 	hs := 0
+	fpsFlag := flag.Int("fps", 0, "change fps (default only should rerender on input)")
+	flag.Parse()
 	os.Mkdir(usrhomedir+"/.2048", os.FileMode(os.O_APPEND|os.O_RDWR|os.O_TRUNC|os.O_CREATE))
 	hsFile, err := os.ReadFile(usrhomedir + "/.2048/highscore.txt")
 
@@ -39,7 +42,7 @@ func main() {
 	loge := slog.New(slog.NewTextHandler(file, &slog.HandlerOptions{}))
 	defer file.Close()
 	slog.SetDefault(loge)
-	ap := ansipixels.NewAnsiPixels(0)
+	ap := ansipixels.NewAnsiPixels(float64(*fpsFlag))
 
 	err = ap.Open()
 	ap.SharedInput.Start(context.TODO())
@@ -68,13 +71,6 @@ func main() {
 			file.Close()
 		}
 	}()
-	ap.OnResize = func() error {
-		slog.Info(fmt.Sprintf("resized h=%d w=%d", ap.H, ap.W))
-		newGame := game.NewGame(ap, hs)
-		newGame.State = g.State
-		g = newGame
-		return nil
-	}
 	ap.HideCursor()
 	g.Draw()
 	for {
