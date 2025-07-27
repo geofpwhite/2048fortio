@@ -47,31 +47,24 @@ type Game struct {
 	AP           *ansipixels.AnsiPixels
 	State        gameState
 	ShowControls bool
+	HighScore    int
+	Score        int
 }
 
 type gameState [4][4]int
 
-func NewGame(ap *ansipixels.AnsiPixels) *Game {
+func NewGame(ap *ansipixels.AnsiPixels, highScore int) *Game {
 	g := &Game{
-		AP:    ap,
-		State: gameState{},
+		AP:        ap,
+		State:     gameState{},
+		HighScore: highScore,
 	}
 	g.AddOneInRandomSpot()
 	return g
 }
 
-func (g *Game) Score() int {
-	var ret int
-	for _, row := range g.State {
-		for _, num := range row {
-			ret += num
-		}
-	}
-	return ret
-}
-
 func (g *Game) AddOneInRandomSpot() {
-	time.Sleep(15 * time.Millisecond)
+	// time.Sleep(15 * time.Millisecond)
 	for {
 		x, y := rand.IntN(4), rand.IntN(4)
 		if g.State[x][y] != 0 {
@@ -108,12 +101,15 @@ func (g *Game) Draw() {
 	}
 	g.AP.StartSyncMode()
 	g.AP.DrawRoundBox(0, 0, 8, 3)
-	g.AP.WriteAtStr(1, 1, fmt.Sprintf("%s%d", ansipixels.Green, g.Score()))
+	g.AP.DrawRoundBox(g.AP.W-8, 0, 8, 3)
+	g.AP.WriteAtStr(1, 1, fmt.Sprintf("%s%d", ansipixels.Red, g.Score))
+	g.AP.WriteAtStr(g.AP.W-7, 1, fmt.Sprintf("%s%d", ansipixels.Green, g.HighScore))
 	g.AP.EndSyncMode()
 }
 
 func (g *Game) shift(x0, y0, xf, yf, xne, yne, dx, dy, dx1, dy1 int) bool {
 	changed := false
+
 	for x := x0; x != xf; x += dx1 {
 		for y := y0; y != yf; y += dy1 {
 			if g.State[x][y] == 0 {
@@ -129,23 +125,26 @@ func (g *Game) shift(x0, y0, xf, yf, xne, yne, dx, dy, dx1, dy1 int) bool {
 			if y2 != yne && g.State[x][y2] == g.State[x][y2+dy] && dy != 0 {
 				g.State[x][y2], g.State[x][y2+dy] = 0, g.State[x][y2+dy]*2
 				g.Draw()
-				time.Sleep(15 * time.Millisecond)
 				changed = true
 			}
 			var x2 int
 			for x2 = x; x2 != xne && g.State[x2][y] != 0 && g.State[x2+dx][y] == 0 && dx != 0; x2 += dx {
 				g.State[x2][y], g.State[x2+dx][y] = g.State[x2+dx][y], g.State[x2][y]
 				g.Draw()
-				time.Sleep(15 * time.Millisecond)
 				changed = true
+				time.Sleep(15 * time.Millisecond)
 			}
 			if x2 != xne && g.State[x2][y] == g.State[x2+dx][y] && dx != 0 {
 				g.State[x2][y], g.State[x2+dx][y] = 0, g.State[x2+dx][y]*2
 				g.Draw()
-				time.Sleep(15 * time.Millisecond)
 				changed = true
 			}
+
 		}
+	}
+	if changed {
+		g.Score++
+		g.HighScore = max(g.Score, g.HighScore)
 	}
 	return changed
 
@@ -197,5 +196,5 @@ func (g *Game) AnyValidMoves() bool {
 }
 
 func (g *Game) Reset() {
-	*g = *NewGame(g.AP)
+	*g = *NewGame(g.AP, g.HighScore)
 }
