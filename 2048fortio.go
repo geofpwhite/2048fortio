@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -21,7 +22,9 @@ func main() {
 	defer file.Close()
 	slog.SetDefault(loge)
 	ap := ansipixels.NewAnsiPixels(0)
+
 	err = ap.Open()
+	ap.SharedInput.Start(context.TODO())
 
 	if err != nil {
 		log.FErrf("Error opening AnsiPixels: %v", err)
@@ -70,10 +73,13 @@ func main() {
 			g.Right()
 		case 40, 's': // down
 			g.Down()
+		case 'h', '?':
+			g.ShowControls = !g.ShowControls
+			g.AP.ClearScreen()
+			g.Draw()
 		case 'q':
 			return
-		default:
-			fmt.Println((ap.Data))
+
 		}
 	}
 

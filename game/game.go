@@ -44,8 +44,9 @@ const (
 )
 
 type Game struct {
-	AP    *ansipixels.AnsiPixels
-	State gameState
+	AP           *ansipixels.AnsiPixels
+	State        gameState
+	ShowControls bool
 }
 
 type gameState [4][4]int
@@ -57,6 +58,16 @@ func NewGame(ap *ansipixels.AnsiPixels) *Game {
 	}
 	g.AddOneInRandomSpot()
 	return g
+}
+
+func (g *Game) Score() int {
+	var ret int
+	for _, row := range g.State {
+		for _, num := range row {
+			ret += num
+		}
+	}
+	return ret
 }
 
 func (g *Game) AddOneInRandomSpot() {
@@ -72,13 +83,11 @@ func (g *Game) AddOneInRandomSpot() {
 	}
 }
 func (g *Game) Draw() {
-	// g.AP.ClearScreen()
 	wi, hi := 0, 0
 	for i := 0; i < g.AP.W-4; i += g.AP.W / 4 {
 		hi = 0
-		for j := 0; j < g.AP.H-4; j += g.AP.H / 4 {
+		for j := 3; j < g.AP.H-4; j += g.AP.H / 4 {
 			g.AP.StartSyncMode()
-			g.AP.DrawRoundBox(0, 0, g.AP.W, g.AP.H)
 			g.AP.DrawColoredBox(i+1, j+1, g.AP.W/4-2, g.AP.H/4-2, NumColors[g.State[wi][hi]], false)
 			g.AP.WriteAtStr(i+g.AP.W/8, j+g.AP.H/8, "     ")
 			g.AP.WriteAtStr(i+g.AP.W/8, j+g.AP.H/8, fmt.Sprintf("%d", g.State[wi][hi]))
@@ -88,6 +97,19 @@ func (g *Game) Draw() {
 		}
 		wi++
 	}
+	if g.ShowControls {
+		g.AP.ClearScreen()
+		g.AP.StartSyncMode()
+		g.AP.ClearScreen()
+		g.AP.DrawRoundBox(g.AP.W/4, g.AP.H/4, g.AP.W/2, g.AP.H/2)
+		g.AP.WriteAtStr(g.AP.W/3, g.AP.H/2, "press wasd or arrow keys to move")
+		g.AP.EndSyncMode()
+		return
+	}
+	g.AP.StartSyncMode()
+	g.AP.DrawRoundBox(0, 0, 8, 3)
+	g.AP.WriteAtStr(1, 1, fmt.Sprintf("%s%d", ansipixels.Green, g.Score()))
+	g.AP.EndSyncMode()
 }
 
 func (g *Game) shift(x0, y0, xf, yf, xne, yne, dx, dy, dx1, dy1 int) bool {
